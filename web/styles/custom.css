@@ -1,0 +1,546 @@
+/* ==========================================================================
+   CareerPilot AI — Minimal Premium Design System
+   Single accent color, neutral slate scale, light + dark themes.
+   Dark mode is toggled by adding/removing the `cp-dark-mode` class on
+   <body> (see render_theme_toggle() in ui_helpers.py).
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ---------------------------------------------------------------------- */
+/* Theme tokens                                                           */
+/* ---------------------------------------------------------------------- */
+
+:root {
+    --cp-bg-app: #F8FAFC;
+    --cp-bg-surface: #FFFFFF;
+    --cp-bg-surface-alt: #F1F5F9;
+    --cp-bg-sidebar: #F8FAFC;
+
+    --cp-border: #E2E8F0;
+    --cp-border-strong: #CBD5E1;
+
+    --cp-text-primary: #0F172A;
+    --cp-text-secondary: #64748B;
+    --cp-text-tertiary: #94A3B8;
+
+    --cp-accent: #B45309;
+    --cp-accent-hover: #92400E;
+    --cp-accent-soft: #FFF7ED;
+    --cp-accent-soft-text: #9A3412;
+    --cp-accent-gradient: linear-gradient(135deg, #D97706 0%, #B45309 55%, #92400E 100%);
+
+    --cp-success-bg: #DCFCE7;
+    --cp-success-text: #166534;
+    --cp-success-border: #BBF7D0;
+    --cp-error-bg: #FEE2E2;
+    --cp-error-text: #991B1B;
+    --cp-error-border: #FECACA;
+    --cp-warning-bg: #FEF3C7;
+    --cp-warning-text: #92400E;
+    --cp-warning-border: #FDE68A;
+    --cp-info-bg: #EEF2FF;
+    --cp-info-text: #3730A3;
+    --cp-info-border: #C7D2FE;
+    --cp-slate-bg: #F1F5F9;
+    --cp-slate-text: #334155;
+    --cp-slate-border: #E2E8F0;
+
+    --cp-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+    --cp-shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+    --cp-shadow-lg: 0 12px 28px -6px rgba(15, 23, 42, 0.14);
+    --cp-shadow-accent: 0 4px 14px -2px rgba(180, 83, 9, 0.20);
+}
+
+body.cp-dark-mode {
+    --cp-bg-app: #0B0F19;
+    --cp-bg-surface: #121826;
+    --cp-bg-surface-alt: #1A2234;
+    --cp-bg-sidebar: #0E1420;
+
+    --cp-border: #232C40;
+    --cp-border-strong: #2E3852;
+
+    --cp-text-primary: #F1F5F9;
+    --cp-text-secondary: #97A3BC;
+    --cp-text-tertiary: #6B7690;
+
+    --cp-accent: #F59E0B;
+    --cp-accent-hover: #FBBF24;
+    --cp-accent-soft: #2B2210;
+    --cp-accent-soft-text: #FCD34D;
+    --cp-accent-gradient: linear-gradient(135deg, #FBBF24 0%, #F59E0B 55%, #D97706 100%);
+
+    --cp-success-bg: #10281D;
+    --cp-success-text: #6EE7A8;
+    --cp-success-border: #1E4A34;
+    --cp-error-bg: #2C1515;
+    --cp-error-text: #FCA5A5;
+    --cp-error-border: #4A1F1F;
+    --cp-warning-bg: #2B2210;
+    --cp-warning-text: #FCD34D;
+    --cp-warning-border: #4A3A18;
+    --cp-info-bg: #1B2044;
+    --cp-info-text: #C7D2FE;
+    --cp-info-border: #34397A;
+    --cp-slate-bg: #1A2234;
+    --cp-slate-text: #CBD5E1;
+    --cp-slate-border: #2E3852;
+
+    --cp-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+    --cp-shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.4);
+    --cp-shadow-lg: 0 16px 32px -8px rgba(0, 0, 0, 0.55);
+    --cp-shadow-accent: 0 4px 16px -2px rgba(245, 158, 11, 0.25);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Base                                                                    */
+/* ---------------------------------------------------------------------- */
+
+html,
+body,
+[class*="st-"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body,
+.stApp {
+    background-color: var(--cp-bg-app);
+    color: var(--cp-text-primary);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    max-width: 1200px;
+}
+
+::selection {
+    background-color: var(--cp-accent-soft);
+    color: var(--cp-accent-soft-text);
+}
+
+/* Slim, unobtrusive scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--cp-border-strong);
+    border-radius: 8px;
+    border: 2px solid var(--cp-bg-app);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--cp-text-tertiary);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Typography                                                              */
+/* ---------------------------------------------------------------------- */
+
+.main h1 {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--cp-text-primary);
+    margin-bottom: 0.25rem;
+    position: relative;
+    display: inline-block;
+}
+
+.main h1::after {
+    content: "";
+    display: block;
+    width: 46px;
+    height: 4px;
+    margin-top: 0.6rem;
+    border-radius: 999px;
+    background: var(--cp-accent-gradient);
+}
+
+.main h2 {
+    font-weight: 700;
+    color: var(--cp-text-primary);
+    letter-spacing: -0.02em;
+}
+
+.main h3 {
+    font-weight: 600;
+    color: var(--cp-text-primary);
+}
+
+.main p,
+.main li,
+.main span,
+.main label {
+    color: var(--cp-text-primary);
+}
+
+a,
+a:visited {
+    color: var(--cp-accent);
+}
+
+a:hover {
+    color: var(--cp-accent-hover);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Metric Cards                                                            */
+/* ---------------------------------------------------------------------- */
+
+[data-testid="stMetric"] {
+    background-color: var(--cp-bg-surface);
+    border: 1px solid var(--cp-border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--cp-shadow-sm);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--cp-shadow-accent);
+    border-color: var(--cp-accent);
+}
+
+[data-testid="stMetricLabel"] {
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    color: var(--cp-text-secondary) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+[data-testid="stMetricValue"] {
+    font-size: 1.9rem !important;
+    font-weight: 800 !important;
+    color: var(--cp-text-primary) !important;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Expander Cards (Accordions)                                             */
+/* ---------------------------------------------------------------------- */
+
+[data-testid="stExpander"] {
+    background-color: var(--cp-bg-surface);
+    border: 1px solid var(--cp-border) !important;
+    border-radius: 14px !important;
+    margin-bottom: 0.75rem !important;
+    box-shadow: var(--cp-shadow-sm);
+    overflow: hidden;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+[data-testid="stExpander"]:hover {
+    border-color: var(--cp-accent) !important;
+    box-shadow: var(--cp-shadow-md);
+}
+
+[data-testid="stExpander"] summary {
+    font-weight: 600 !important;
+    color: var(--cp-text-primary) !important;
+    padding: 1rem 1.25rem !important;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Forms                                                                    */
+/* ---------------------------------------------------------------------- */
+
+[data-testid="stForm"] {
+    background-color: var(--cp-bg-surface);
+    border: 1px solid var(--cp-border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: var(--cp-shadow-md);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea {
+    background-color: var(--cp-bg-surface) !important;
+    border: 1px solid var(--cp-border) !important;
+    border-radius: 8px !important;
+    color: var(--cp-text-primary) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+[data-testid="stTextInput"] input:focus,
+[data-testid="stTextArea"] textarea:focus {
+    border-color: var(--cp-accent) !important;
+    box-shadow: 0 0 0 3px var(--cp-accent-soft) !important;
+}
+
+[data-testid="InputInstructions"] {
+    display: none;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Buttons                                                                  */
+/* ---------------------------------------------------------------------- */
+
+.stButton>button,
+div[data-testid="stFormSubmitButton"]>button {
+    font-weight: 600;
+    border-radius: 9px;
+    padding: 0.55rem 1.25rem;
+    transition: all 0.18s ease;
+    border: 1px solid var(--cp-border);
+    background-color: var(--cp-bg-surface);
+    color: var(--cp-text-primary);
+}
+
+.stButton>button:hover,
+div[data-testid="stFormSubmitButton"]>button:hover {
+    border-color: var(--cp-accent);
+    color: var(--cp-accent);
+    transform: translateY(-1px);
+}
+
+.stButton>button[kind="primary"],
+div[data-testid="stFormSubmitButton"]>button[kind="primary"],
+button[data-testid="stBaseButton-primary"] {
+    background: var(--cp-accent-gradient) !important;
+    border: none !important;
+    color: #FFFFFF !important;
+    box-shadow: var(--cp-shadow-accent);
+}
+
+.stButton>button[kind="primary"]:hover,
+div[data-testid="stFormSubmitButton"]>button[kind="primary"]:hover,
+button[data-testid="stBaseButton-primary"]:hover {
+    filter: brightness(1.07);
+    transform: translateY(-2px);
+    color: #FFFFFF !important;
+    box-shadow: var(--cp-shadow-lg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Sidebar                                                                  */
+/* ---------------------------------------------------------------------- */
+
+[data-testid="stSidebar"] {
+    background-color: var(--cp-bg-sidebar);
+    border-right: 1px solid var(--cp-border);
+}
+
+[data-testid="stSidebarNav"] {
+    padding-top: 1rem;
+}
+
+[data-testid="stSidebar"] a {
+    border-radius: 8px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+[data-testid="stSidebar"] a:hover {
+    background-color: var(--cp-accent-soft);
+    color: var(--cp-accent) !important;
+}
+
+.sidebar-category {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--cp-text-tertiary);
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Custom UI Cards & Badges                                                */
+/* ---------------------------------------------------------------------- */
+
+.cp-card {
+    background-color: var(--cp-bg-surface);
+    border: 1px solid var(--cp-border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--cp-shadow-sm);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.cp-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--cp-shadow-md);
+    border-color: var(--cp-border-strong);
+}
+
+.cp-card-header {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--cp-text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.cp-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.7rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-right: 0.4rem;
+    margin-bottom: 0.4rem;
+    transition: transform 0.12s ease;
+}
+
+.cp-badge:hover {
+    transform: translateY(-1px);
+}
+
+.cp-badge-matched,
+.cp-badge-success {
+    background-color: var(--cp-success-bg);
+    color: var(--cp-success-text);
+    border: 1px solid var(--cp-success-border);
+}
+
+.cp-badge-missing,
+.cp-badge-error {
+    background-color: var(--cp-error-bg);
+    color: var(--cp-error-text);
+    border: 1px solid var(--cp-error-border);
+}
+
+.cp-badge-warning,
+.cp-badge-medium {
+    background-color: var(--cp-warning-bg);
+    color: var(--cp-warning-text);
+    border: 1px solid var(--cp-warning-border);
+}
+
+.cp-badge-info,
+.cp-badge-indigo {
+    background-color: var(--cp-info-bg);
+    color: var(--cp-info-text);
+    border: 1px solid var(--cp-info-border);
+}
+
+.cp-badge-slate {
+    background-color: var(--cp-slate-bg);
+    color: var(--cp-slate-text);
+    border: 1px solid var(--cp-slate-border);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Empty State                                                             */
+/* ---------------------------------------------------------------------- */
+
+.cp-empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background-color: var(--cp-bg-surface);
+    border: 2px dashed var(--cp-border-strong);
+    border-radius: 16px;
+    margin: 1.5rem 0;
+}
+
+.cp-empty-icon {
+    font-size: 2.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.cp-empty-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--cp-text-primary);
+    margin-bottom: 0.4rem;
+}
+
+.cp-empty-desc {
+    font-size: 0.9rem;
+    color: var(--cp-text-secondary);
+    max-width: 420px;
+    margin: 0 auto 1.25rem auto;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Key Value Rows                                                          */
+/* ---------------------------------------------------------------------- */
+
+.cp-kv-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--cp-border);
+    font-size: 0.9rem;
+}
+
+.cp-kv-label {
+    color: var(--cp-text-secondary);
+    font-weight: 500;
+}
+
+.cp-kv-value {
+    color: var(--cp-text-primary);
+    font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tabs                                                                     */
+/* ---------------------------------------------------------------------- */
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--cp-border);
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 45px;
+    border-radius: 8px 8px 0 0;
+    font-weight: 500;
+    color: var(--cp-text-secondary);
+    padding: 0 1.25rem;
+    transition: color 0.15s ease;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    color: var(--cp-accent);
+}
+
+.stTabs [aria-selected="true"] {
+    color: var(--cp-accent) !important;
+    font-weight: 700 !important;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Progress bars                                                           */
+/* ---------------------------------------------------------------------- */
+
+[data-testid="stProgress"]>div>div>div {
+    background: var(--cp-accent-gradient) !important;
+}
+
+[data-testid="stProgress"]>div>div {
+    background-color: var(--cp-bg-surface-alt) !important;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Containers with border=True                                             */
+/* ---------------------------------------------------------------------- */
+
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border-radius: 14px !important;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Hide Streamlit Default Branding                                         */
+/* ---------------------------------------------------------------------- */
+
+#MainMenu {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
