@@ -446,4 +446,51 @@ class APIClient:
             headers=self.headers,
         )
 
+# ------------------------------------------------------------------ #
+    # Phase 9 – AI Mock Interview  (prefix: /interview)
+    # ------------------------------------------------------------------ #
+
+    def start_interview(self, payload):
+        return requests.post(
+            f"{self.base_url}/interview/start",
+            json=payload,
+            headers=self.headers,
+        )
+
+    def submit_interview_answer(self, session_id, payload):
+        return requests.post(
+            f"{self.base_url}/interview/{session_id}/answer",
+            json=payload,
+            headers=self.headers,
+        )
+
+    def finish_interview(self, session_id):
+        return requests.post(
+            f"{self.base_url}/interview/{session_id}/finish",
+            headers=self.headers,
+        )
+
+    def get_interview_history(self):
+        return requests.get(
+            f"{self.base_url}/interview/history",
+            headers=self.headers,
+        )
+
+    def get_interview(self, session_id):
+        return requests.get(
+            f"{self.base_url}/interview/{session_id}",
+            headers=self.headers,
+        )
+
+    def get_interview_feedback(self, session_id):
+        return requests.get(
+            f"{self.base_url}/interview/{session_id}/feedback",
+            headers=self.headers,
+        )
+
+    def get_interview_analytics(self):
+        return requests.get(
+            f"{self.base_url}/interview/analytics",
+            headers=self.headers,
+        )
 api_client = APIClient()

@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 
 def render_sidebar():
@@ -62,6 +60,7 @@ def render_sidebar():
             st.page_link("pages/08_career_twin.py", label="Career Digital Twin", icon="🧬")
             st.page_link("pages/09_career_coach.py", label="AI Career Coach", icon="🤖")
             st.page_link("pages/10_career_strategy.py", label="Career Strategy", icon="🗺️")
+            st.page_link("pages/11_interview.py", label="AI Mock Interview", icon="🎤")
             
             # --- SECTION 4: ACCOUNT ---
             st.markdown('<div class="sidebar-category">Account</div>', unsafe_allow_html=True)

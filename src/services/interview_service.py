@@ -62,7 +62,6 @@ class InterviewService:
         await db.refresh(session)
         return self._serialize_session(session)
 
-    # -------- FIXED: uses the correct question index --------
     async def answer_question(
         self,
         db: AsyncSession,
@@ -78,7 +77,6 @@ class InterviewService:
         if not questions:
             raise ValueError("No questions in session")
 
-        # Use the requested index
         idx = payload.question_index
         if idx < 0 or idx >= len(questions):
             raise ValueError("Question index out of range")
@@ -90,7 +88,7 @@ class InterviewService:
 
         answer_record = InterviewAnswer(
             session_id=session_id,
-            question_index=idx,                      # <-- fixed
+            question_index=idx,
             question_text=question_text,
             user_answer=payload.answer,
             ai_feedback=evaluation,
@@ -102,7 +100,6 @@ class InterviewService:
         await db.refresh(answer_record)
         return evaluation
 
-    # -------- FIXED: loads answers and passes full interview data --------
     async def finish_session(
         self,
         db: AsyncSession,
@@ -113,12 +110,10 @@ class InterviewService:
         if not session or session.user_id != user_id:
             raise ValueError("Interview session not found")
 
-        # Fetch all answers for this session
         stmt = select(InterviewAnswer).where(InterviewAnswer.session_id == session_id)
         result = await db.execute(stmt)
         answers = result.scalars().all()
 
-        # Build the interview data structure required by the new prompt
         interview_data = {
             "questions": session.questions.get("questions", []) if isinstance(session.questions, dict) else [],
             "answers": [
@@ -134,12 +129,10 @@ class InterviewService:
             "feedback_summary": session.feedback_summary or {},
         }
 
-        # Generate final feedback using the new agent method
         feedback = await self.agent.generate_feedback(interview_data)
 
-        # Update session with feedback and overall score
         session.feedback_summary = feedback
-        session.overall_score = feedback.get("overall_score")  # <-- from the LLM
+        session.overall_score = feedback.get("overall_score")
 
         db.add(session)
         await db.commit()
@@ -163,15 +156,57 @@ class InterviewService:
         return self._serialize_session(session)
 
     async def get_analytics(self, db: AsyncSession, user_id: UUID) -> Dict[str, Any]:
+        """
+        Returns analytics for the user's interview sessions.
+        Always returns a full response structure, even when no data exists.
+        """
         result = await db.execute(select(InterviewSession).where(InterviewSession.user_id == user_id))
         sessions = result.scalars().all()
-        scores = [session.overall_score or 0 for session in sessions if session.overall_score is not None]
-        return {
-            "average_score": sum(scores) / max(1, len(scores)),
-            "best_score": max(scores) if scores else 0,
-            "worst_score": min(scores) if scores else 0,
-            "session_count": len(sessions),
+
+        # Default response – all fields present with correct types
+        response = {
+            "total_interviews": 0,
+            "completed_interviews": 0,
+            "average_score": 0.0,
+            "best_score": 0.0,
+            "worst_score": 0.0,
+            "strong_skills": [],
+            "weak_skills": [],
+            "score_history": [],
+            "confidence_history": [],
         }
+
+        if not sessions:
+            return response
+
+        completed = [s for s in sessions if s.overall_score is not None]
+        response["total_interviews"] = len(sessions)
+
+        if completed:
+            scores = [s.overall_score for s in completed]
+            response["completed_interviews"] = len(completed)
+            response["average_score"] = round(sum(scores) / len(scores), 1)
+            response["best_score"] = max(scores)
+            response["worst_score"] = min(scores)
+
+            # Collect strengths/weaknesses from feedback_summary
+            strong = []
+            weak = []
+            for s in completed:
+                if s.feedback_summary and isinstance(s.feedback_summary, dict):
+                    strong.extend(s.feedback_summary.get("strengths", []))
+                    weak.extend(s.feedback_summary.get("weaknesses", []))
+            response["strong_skills"] = list(set(strong))  # unique
+            response["weak_skills"] = list(set(weak))
+
+            # Score history sorted by creation date
+            sorted_sessions = sorted(completed, key=lambda s: s.created_at)
+            response["score_history"] = [s.overall_score for s in sorted_sessions]
+            # Confidence history – if you have confidence_score in feedback_summary, extract it
+            # For now, use the same list as score_history
+            response["confidence_history"] = response["score_history"]
+
+        return response
 
     async def get_feedback(
         self,

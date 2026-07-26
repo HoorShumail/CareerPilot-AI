@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -61,6 +61,16 @@ async def get_history(
     return await service.get_history(db, current_user.id)
 
 
+# -------- IMPORTANT: /analytics must come BEFORE /{session_id} --------
+@router.get("/analytics", response_model=dict)
+async def get_analytics(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session),
+    service: InterviewService = Depends(get_interview_service),
+) -> Any:
+    return await service.get_analytics(db, current_user.id)
+
+
 @router.get("/{session_id}", response_model=InterviewSessionResponse)
 async def get_session(
     session_id: UUID,
@@ -72,15 +82,6 @@ async def get_session(
         return await service.get_session(db, current_user.id, session_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-
-
-@router.get("/analytics", response_model=dict)
-async def get_analytics(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_session),
-    service: InterviewService = Depends(get_interview_service),
-) -> Any:
-    return await service.get_analytics(db, current_user.id)
 
 
 @router.get("/{session_id}/feedback", response_model=dict)

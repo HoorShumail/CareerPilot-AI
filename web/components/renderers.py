@@ -50,7 +50,27 @@ def skill_label(skill) -> str:
     return str(skill)
 
 
-_SEVERITY_ICONS = {"high": "🔴", "medium": "🟠", "low": "🟢"}
+def skill_tier(pv: float) -> str:
+    """Maps a 0-1 proficiency value to a readable tier label."""
+    if pv >= 0.8:
+        return "Expert"
+    if pv >= 0.6:
+        return "Advanced"
+    if pv >= 0.35:
+        return "Intermediate"
+    return "Beginner"
+
+
+def render_empty_state(title: str, message: str, icon: str = "📭") -> None:
+    """Centered empty-state placeholder — used instead of a bare st.info() when a section has no data yet."""
+    st.markdown(
+        "<div style='text-align:center;padding:48px 16px;color:#374151;'>"
+        f"<div style='font-size:44px;line-height:1;'>{icon}</div>"
+        f"<div style='font-size:18px;font-weight:600;margin-top:12px;'>{title}</div>"
+        f"<div style='color:#6b7280;margin-top:4px;'>{message}</div>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -158,80 +178,17 @@ def render_section(data) -> None:
 # ---------------------------------------------------------------------------
 
 
-def render_skill_gap_analysis(data: dict) -> None:
-    """
-    Handles the skill-gap-analysis shape:
-      {
-        "gaps": [{"skill": .., "reason": .., "severity": ..}, ...],
-        "weak_skills": [{"skill": .., "reason": .., "severity": ..}, ...],
-        "emerging_skills": [{"skill": .., "reason": .., "severity": ..}, ...],
-        "priority_skills": ["Data Engineering", "MLOps", ...],
-      }
-    Each skill/reason/severity entry is rendered as a labeled line with a
-    severity-colored dot, instead of the raw list-of-dicts being dumped as text.
-    """
-
-    def _render_skill_entries(entries) -> None:
-        if not entries:
-            return
-        if isinstance(entries, list) and entries and isinstance(entries[0], dict):
-            for entry in entries:
-                skill = entry.get("skill") or entry.get("name")
-                reason = entry.get("reason") or entry.get("description")
-                severity = str(entry.get("severity", "")).lower()
-                icon = _SEVERITY_ICONS.get(severity, "🔵")
-                line = f"{icon} **{skill}**"
-                if severity:
-                    line += f"  ·  {severity.title()} severity"
-                st.markdown(line)
-                if reason:
-                    st.caption(reason)
-        else:
-            render_pills(entries)
-
-    section_labels = {
-        "gaps": "Skill Gaps",
-        "weak_skills": "Weak Skills",
-        "emerging_skills": "Emerging Skills",
-        "priority_skills": "Priority Skills",
-    }
-
-    for key, label in section_labels.items():
-        value = data.get(key)
-        if not value:
-            continue
-        st.markdown(f"**{label}**")
-        if key == "priority_skills":
-            render_pills(value)
-        else:
-            _render_skill_entries(value)
-        st.write("")
-
-    handled = set(section_labels)
-    leftovers = {k: v for k, v in data.items() if k not in handled and v not in (None, "", [], {})}
-    for k, v in leftovers.items():
-        st.markdown(f"**{humanize(k)}**")
-        render_generic(v) if isinstance(v, (list, dict)) else st.write(v)
-
-
 def render_skills(skills) -> None:
-    """Skill pills, or progress bars when proficiency scores are present."""
+    """Skill pills, or progress bars + tier labels when proficiency scores are present."""
     if isinstance(skills, dict):
-        # Skill-gap-analysis shape (gaps/weak_skills/emerging_skills/priority_skills)
-        # gets its own renderer — it is NOT a {name: proficiency} map, and treating
-        # it as one used to dump the raw list-of-dicts as text.
-        if any(k in skills for k in ("gaps", "weak_skills", "emerging_skills", "priority_skills")):
-            render_skill_gap_analysis(skills)
-            return
-
         for name, level in skills.items():
-            if isinstance(level, (list, dict)):
-                st.markdown(f"**{name}**")
-                render_generic(level)
-                continue
             pv = progress_value(level)
             if pv is not None:
-                st.markdown(f"**{name}**")
+                col_name, col_tier = st.columns([3, 1])
+                with col_name:
+                    st.markdown(f"**{name}**")
+                with col_tier:
+                    st.caption(skill_tier(pv))
                 st.progress(pv)
             else:
                 st.markdown(f"🟢 {name} — {level}")
@@ -243,7 +200,11 @@ def render_skills(skills) -> None:
                 name = s.get("name") or s.get("skill")
                 pv = progress_value(s.get("level") or s.get("proficiency") or s.get("score"))
                 if name and pv is not None:
-                    st.markdown(f"**{name}**")
+                    col_name, col_tier = st.columns([3, 1])
+                    with col_name:
+                        st.markdown(f"**{name}**")
+                    with col_tier:
+                        st.caption(skill_tier(pv))
                     st.progress(pv)
                 elif name:
                     st.markdown(f"🟢 {name}")
@@ -298,18 +259,12 @@ def render_bullet_list(items) -> None:
 
 def render_skill_section(skills) -> None:
     """
-    Handles the common gap-analysis shape:
-      {"learning_skills": [...], "missing_skills": [...]}
-    (also accepts strongest_skills / weakest_skills as aliases), plus the
-    gaps/weak_skills/emerging_skills/priority_skills shape, falling back to
-    render_skills() for plain skill lists or proficiency dicts.
+    Handles three shapes:
+      1. Gap-analysis dicts: {"learning_skills": [...], "missing_skills": [...]}
+         (also accepts strongest_skills / weakest_skills as aliases)
+      2. Wrapped skill lists: {"skills": [...]} — e.g. render_skill_section({"skills": strengths})
+      3. Plain skill lists/dicts, passed straight through to render_skills()
     """
-    if isinstance(skills, dict) and any(
-        k in skills for k in ("gaps", "weak_skills", "emerging_skills", "priority_skills")
-    ):
-        render_skill_gap_analysis(skills)
-        return
-
     if isinstance(skills, dict) and any(
         k in skills for k in ("learning_skills", "missing_skills", "strongest_skills", "weakest_skills")
     ):
@@ -332,10 +287,24 @@ def render_skill_section(skills) -> None:
             render_generic(v)
         return
 
+    if isinstance(skills, dict) and "skills" in skills and isinstance(skills["skills"], list):
+        render_skills(skills["skills"])
+        return
+
     render_skills(skills)
 
 
-_BADGE_ICONS = {"green": "🟢", "orange": "⚠️", "red": "❌", "check": "✅", "blue": "🔵"}
+_BADGE_ICONS = {"green": "🟢", "orange": "⚠️", "red": "❌", "check": "✅", "blue": "🔵", "purple": "🟣"}
+
+
+def render_ai_badge(label: str = "AI-Generated Analysis") -> None:
+    """Small purple pill marking a section as AI-generated (per the purple = AI Analysis convention)."""
+    st.markdown(
+        "<div style='display:inline-block;background:#f3e8ff;color:#6b21a8;"
+        "padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;"
+        f"margin-bottom:6px;'>🟣 {label}</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def _badge_note(tone: str, text: str) -> None:
@@ -343,6 +312,8 @@ def _badge_note(tone: str, text: str) -> None:
         st.info(text, icon="⚠️")
     elif tone == "red":
         st.error(text, icon="❌")
+    elif tone == "purple":
+        st.markdown(f"<span style='color:#6b21a8;'>{text}</span>", unsafe_allow_html=True)
     else:
         st.caption(text)
 
@@ -376,6 +347,16 @@ def render_badge_list(items, tone: str = "green") -> None:
                 _badge_note(tone, str(note))
     else:
         render_generic(items)
+
+
+def render_strengths(items) -> None:
+    """💪 Strengths — thin wrapper over render_badge_list for naming consistency with the design spec."""
+    render_badge_list(items, tone="green")
+
+
+def render_weaknesses(items) -> None:
+    """⚠️ Areas to improve — thin wrapper over render_badge_list for naming consistency with the design spec."""
+    render_badge_list(items, tone="orange")
 
 
 # ---------------------------------------------------------------------------
@@ -708,6 +689,106 @@ def render_roadmap_section(data) -> None:
                     render_section(section_data)
     else:
         render_section(data)
+
+
+# Alias matching the naming convention requested in the design spec.
+render_roadmap = render_roadmap_section
+
+
+def render_checklist(items) -> None:
+    """Weekly/monthly goals rendered as a checklist (☑ done / ☐ pending) instead of cards or JSON."""
+    if isinstance(items, list):
+        for item in items:
+            if isinstance(item, dict):
+                label = item.get("title") or item.get("goal") or item.get("name") or "Untitled goal"
+                done = bool(item.get("completed") or item.get("done") or item.get("status") == "completed")
+                box = "☑" if done else "☐"
+                st.markdown(f"{box} {label}")
+                deadline = item.get("deadline") or item.get("due_date")
+                if deadline:
+                    st.caption(f"Due: {deadline}")
+            else:
+                st.markdown(f"☐ {item}")
+    else:
+        render_generic(items)
+
+
+def render_certifications(items) -> None:
+    """📜 Certifications — cards with provider/issuer, status, and date when structured, pills otherwise."""
+    if isinstance(items, list) and items and isinstance(items[0], dict):
+        for cert in items:
+            with st.container(border=True):
+                name = cert.get("name") or cert.get("title", "Certification")
+                status = cert.get("status")
+                st.markdown(f"**{name}**" + (f"  ·  {status}" if status else ""))
+                meta_bits = []
+                issuer = cert.get("issuer") or cert.get("provider")
+                if issuer:
+                    meta_bits.append(f"Issuer: {issuer}")
+                date = cert.get("date") or cert.get("issued_date") or cert.get("completed_date")
+                if date:
+                    meta_bits.append(str(date))
+                if meta_bits:
+                    st.caption(" · ".join(meta_bits))
+                handled = {"name", "title", "status", "issuer", "provider", "date", "issued_date", "completed_date"}
+                leftovers = {k: v for k, v in cert.items() if k not in handled and v not in (None, "", [], {})}
+                for k, v in leftovers.items():
+                    st.write(f"**{humanize(k)}:** {v}" if not isinstance(v, (list, dict)) else f"**{humanize(k)}**")
+                    if isinstance(v, (list, dict)):
+                        render_generic(v)
+    elif isinstance(items, list):
+        render_pills(items)
+    else:
+        render_generic(items)
+
+
+def render_projects(items) -> None:
+    """🔨 Project recommendation/portfolio cards — name, description, technologies, outcomes, GitHub, duration."""
+    if not isinstance(items, list):
+        render_generic(items)
+        return
+
+    for proj in items:
+        if not isinstance(proj, dict):
+            st.write(f"• {proj}")
+            continue
+        with st.container(border=True):
+            title = proj.get("title") or proj.get("name", "Untitled Project")
+            difficulty = proj.get("difficulty", "")
+            st.markdown(f"**{title}**" + (f"  ·  `{difficulty}`" if difficulty else ""))
+
+            if proj.get("description"):
+                st.write(proj["description"])
+
+            col1, col2 = st.columns(2)
+            with col1:
+                if proj.get("technologies"):
+                    st.write("**Technologies:** " + ", ".join(proj["technologies"]))
+                if proj.get("skills_gained"):
+                    st.write("**Skills gained:** " + ", ".join(proj["skills_gained"]))
+                outcomes = proj.get("outcomes") or proj.get("expected_outcomes")
+                if outcomes:
+                    st.write("**Outcomes:** " + (", ".join(outcomes) if isinstance(outcomes, list) else outcomes))
+            with col2:
+                duration = proj.get("estimated_duration") or proj.get("duration")
+                if duration:
+                    st.write(f"**Duration:** {duration}")
+                if proj.get("resume_value"):
+                    st.write(f"**Resume Value:** {proj['resume_value']}")
+                github = proj.get("github") or proj.get("github_url") or proj.get("repo_url")
+                if github:
+                    st.write(f"**GitHub:** {github}")
+
+            handled = {
+                "title", "name", "difficulty", "description", "technologies", "skills_gained",
+                "outcomes", "expected_outcomes", "estimated_duration", "duration", "resume_value",
+                "github", "github_url", "repo_url",
+            }
+            leftovers = {k: v for k, v in proj.items() if k not in handled and v not in (None, "", [], {})}
+            for k, v in leftovers.items():
+                st.write(f"**{humanize(k)}:** {v}" if not isinstance(v, (list, dict)) else f"**{humanize(k)}**")
+                if isinstance(v, (list, dict)):
+                    render_generic(v)
 
 
 def render_verdict(data) -> None:
