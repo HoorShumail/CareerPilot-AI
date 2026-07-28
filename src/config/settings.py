@@ -127,6 +127,7 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore",
     )
-
+print("POSTGRES_DB from env:", Settings().POSTGRES_DB)
+print("SQLALCHEMY_DATABASE_URI from env:", Settings().SQLALCHEMY_DATABASE_URI)
 
 settings = Settings()
